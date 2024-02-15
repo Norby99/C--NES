@@ -16,12 +16,11 @@
             N = (1 << 7),   // Negative
         }
 
-        public byte a = 0x00;        // Accumulator Register
+        public byte a = 0x00;       // Accumulator Register
         public byte x = 0x00;       // X Register
         public byte y = 0x00;       // Y Register
         public byte stkp = 0x00;    // Stack Pointer (points to a location on the BUS)
         public UInt16 pc = 0x0000;  // Program Counter
         public byte status = 0x00;  // Status Register
-
     }
 }
