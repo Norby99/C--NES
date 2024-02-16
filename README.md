@@ -1,4 +1,4 @@
-# C-NES
+# CSharp-NES
 NES emulator written in C#
 
 This project is heavily inspired by [javidx9](https://www.youtube.com/@javidx9).
