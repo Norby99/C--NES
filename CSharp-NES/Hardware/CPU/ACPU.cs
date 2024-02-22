@@ -40,5 +40,7 @@ namespace CSharp_NES.Hardware.CPU
         public UInt16 AddrRel { get; private set; } = 0x0000;
         public byte Cycles { get; private set; } = 0;   // cicles left for the duration of the current instruction
         public byte Opcode { get; private set; } = 0x00;
+
+        public List<Instruction>? Lookup { get; protected set; }
     }
 }
