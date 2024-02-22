@@ -32,7 +32,7 @@ namespace CSharp_NES.Hardware.CPU
             throw new NotImplementedException();
         }
 
-        private SetFlag(FLAGS6502 flag)
+        private void SetFlag(FLAGS6502 flag)
         {
             throw new NotImplementedException();
         }
