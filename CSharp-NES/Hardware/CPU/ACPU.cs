@@ -26,21 +26,8 @@ namespace CSharp_NES.Hardware.CPU
         public ushort pc = 0x0000;  // Program Counter
         public byte status = 0x00;  // Status Register
 
-        // Addressing Modes
-        public abstract byte IMP();
-        public abstract byte IMM();
-        public abstract byte ZP0();
-        public abstract byte ZPX();
-        public abstract byte ZPY();
-        public abstract byte REL();
-        public abstract byte ABS();
-        public abstract byte ABX();
-        public abstract byte ABY();
-        public abstract byte IND();
-        public abstract byte IZX();
-        public abstract byte IYZ();
-
         public abstract void Clock();
+
         // Interrupts
         public abstract void Reset();
         public abstract void IRQ();
