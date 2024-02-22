@@ -2,17 +2,17 @@
 {
     internal struct Instruction
     {
-        String name;
-        Func<byte> opcode;
-        Func<byte> addressmode;
-        byte cycles = 0;
+        String Name;
+        Func<byte> Opcode;
+        Func<byte> Addressmode;
+        byte Cycles = 0;
 
         public Instruction(String name, Func<byte> opcode, Func<byte> addrmode, byte cycles)
         {
-            this.name = name;
-            this.opcode = opcode;
-            this.addressmode = addrmode;
-            this.cycles = cycles;
+            this.Name = name;
+            this.Opcode = opcode;
+            this.Addressmode = addrmode;
+            this.Cycles = cycles;
         }
     }
 }

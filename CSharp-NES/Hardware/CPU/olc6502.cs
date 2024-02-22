@@ -4,7 +4,7 @@ namespace CSharp_NES.Hardware.CPU
 {
     internal class olc6502 : ACPU
     {
-        private IBus bus;
+        private IBus BUS;
 
         private Opcodes Opcodes = new Opcodes();
         private AddressingModes AModes = new AddressingModes();
@@ -283,17 +283,17 @@ namespace CSharp_NES.Hardware.CPU
 
         public override void ConnectBus(IBus n)
         {
-            bus = n;
+            BUS = n;
         }
 
         private void Write(ushort addr, byte data)
         {
-            bus.Write(addr, data);
+            BUS.Write(addr, data);
         }
 
         private byte Read(ushort addr)
         {
-            return bus.Read(addr, false);
+            return BUS.Read(addr, false);
         }
 
         private byte GetFlag(FLAGS6502 flag)

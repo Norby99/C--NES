@@ -19,12 +19,12 @@ namespace CSharp_NES.Hardware.CPU
         }
 
         //TODO: Maybe in the future change this to be private set
-        public byte a = 0x00;       // Accumulator Register
-        public byte x = 0x00;       // X Register
-        public byte y = 0x00;       // Y Register
-        public byte stkp = 0x00;    // Stack Pointer (points to a location on the BUS)
-        public ushort pc = 0x0000;  // Program Counter
-        public byte status = 0x00;  // Status Register
+        public byte A = 0x00;       // Accumulator Register
+        public byte X = 0x00;       // X Register
+        public byte Y = 0x00;       // Y Register
+        public byte STKP = 0x00;    // Stack Pointer (points to a location on the BUS)
+        public ushort PC = 0x0000;  // Program Counter
+        public byte Status = 0x00;  // Status Register
 
         public abstract void Clock();
 
