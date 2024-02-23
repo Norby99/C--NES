@@ -34,13 +34,5 @@ namespace CSharp_NES.Hardware.CPU
         public abstract void NMI();
 
         public abstract byte Fetch();
-        public byte Fetched { get; private set; } = 0x00;
-
-        public UInt16 AddrAbs { get; private set; } = 0x0000;
-        public UInt16 AddrRel { get; private set; } = 0x0000;
-        public byte Cycles { get; private set; } = 0;   // cicles left for the duration of the current instruction
-        public byte Opcode { get; private set; } = 0x00;
-
-        public List<Instruction>? Lookup { get; protected set; }
     }
 }

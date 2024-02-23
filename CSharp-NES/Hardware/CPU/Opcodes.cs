@@ -2,7 +2,7 @@
 {
     internal class Opcodes
     {
-        // Opcodes
+        // OpcodesFN
         public byte ADC()
         {
             throw new NotImplementedException();
@@ -283,7 +283,7 @@
             throw new NotImplementedException();
         }
 
-        // Illigal Opcodes
+        // Illigal OpcodesFN
         public byte XXX()
         {
             throw new NotImplementedException();

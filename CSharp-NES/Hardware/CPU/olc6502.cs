@@ -6,21 +6,33 @@ namespace CSharp_NES.Hardware.CPU
     {
         private IBus BUS;
 
-        private Opcodes Opcodes = new Opcodes();
+        private Opcodes OpcodesFN = new Opcodes();
         private AddressingModes AModes = new AddressingModes();
+
+        public byte Fetched { get; private set; } = 0x00;
+
+        public UInt16 AddrAbs { get; private set; } = 0x0000;
+        public UInt16 AddrRel { get; private set; } = 0x0000;
+        public byte Cycles { get; private set; } = 0;   // cicles left for the duration of the current instruction
+        public byte Opcode { get; private set; } = 0x00;
+
+        public List<Instruction> Lookup { get; private set; }
 
         public olc6502()
         {
-            Opcodes = new Opcodes();
-            LookupSetupper(Opcodes, AModes);
+            OpcodesFN = new Opcodes();
+            Lookup = LookupInstructions(OpcodesFN, AModes);
         }
 
         /// <summary>
-        /// Sets up the Instruction list
+        /// Sets up the Instructions list
         /// </summary>
-        private void LookupSetupper(Opcodes ops, AddressingModes ads)
+        /// <param name="ops"> The opcodes class </param>
+        /// <param name="ads"> the addressing modes class </param>
+        /// <returns></returns>
+        private List<Instruction> LookupInstructions(Opcodes ops, AddressingModes ads)
         {
-            Lookup = new List<Instruction>
+            return new List<Instruction>
             {
                 new Instruction("BRK", ops.BRK, ads.IMM, 7),
                 new Instruction("ORA", ops.ORA, ads.IZX, 6),
@@ -304,6 +316,24 @@ namespace CSharp_NES.Hardware.CPU
         private void SetFlag(FLAGS6502 flag)
         {
             throw new NotImplementedException();
+        }
+
+        public override void Clock()
+        {
+            if (Cycles == 0)
+            {
+                Opcode = Read(PC);
+                PC++;
+
+                Cycles = Lookup[0].Cycles;
+
+                Lookup[Opcode].Addressmode();
+                Lookup[Opcode].Operate();
+
+                Cycles += (additionalCycle1 & additionalCycle2);
+            }
+
+            Cycles--;
         }
     }
 }
