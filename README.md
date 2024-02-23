@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/norby99/csharlp-nes/badge)](https://www.codefactor.io/repository/github/norby99/csharlp-nes)
+
 # CSharp-NES
 NES emulator written in C#
 
