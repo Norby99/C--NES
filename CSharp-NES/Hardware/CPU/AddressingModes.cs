@@ -1,7 +1,20 @@
-﻿namespace CSharp_NES.Hardware.CPU
+﻿using System.Runtime.CompilerServices;
+
+namespace CSharp_NES.Hardware.CPU
 {
     internal class AddressingModes
     {
+        private ACPU CPU;
+        private Registers RG;
+        private InternalVar IV;
+
+        public AddressingModes(ACPU cpu, Registers rg, InternalVar iv)
+        {
+            CPU = cpu;
+            RG = rg;
+            IV = iv;
+        }
+
         // Addressing Modes
         public byte IMP()
         {

@@ -6,21 +6,20 @@ namespace CSharp_NES.Hardware.CPU
     {
         private IBus BUS;
 
-        private Opcodes OpcodesFN = new Opcodes();
-        private AddressingModes AModes = new AddressingModes();
+        private Opcodes OpcodesFN;
+        private AddressingModes AModes;
 
-        public byte Fetched { get; private set; } = 0x00;
+        private Registers Registers = new Registers();
 
-        public UInt16 AddrAbs { get; private set; } = 0x0000;
-        public UInt16 AddrRel { get; private set; } = 0x0000;
-        public byte Cycles { get; private set; } = 0;   // cicles left for the duration of the current instruction
-        public byte Opcode { get; private set; } = 0x00;
+        private InternalVar InternalVar = new InternalVar();
 
         public List<Instruction> Lookup { get; private set; }
 
         public olc6502()
         {
             OpcodesFN = new Opcodes();
+            AModes = new AddressingModes(this, Registers, InternalVar);
+
             Lookup = LookupInstructions(OpcodesFN, AModes);
         }
 
@@ -298,12 +297,12 @@ namespace CSharp_NES.Hardware.CPU
             BUS = n;
         }
 
-        private void Write(ushort addr, byte data)
+        public override void Write(ushort addr, byte data)
         {
             BUS.Write(addr, data);
         }
 
-        private byte Read(ushort addr)
+        public override byte Read(ushort addr)
         {
             return BUS.Read(addr, false);
         }
@@ -320,20 +319,20 @@ namespace CSharp_NES.Hardware.CPU
 
         public override void Clock()
         {
-            if (Cycles == 0)
+            if (InternalVar.Cycles == 0)
             {
-                Opcode = Read(PC);
-                PC++;
+                InternalVar.Opcode = Read(Registers.PC);
+                Registers.PC++;
 
-                Cycles = Lookup[0].Cycles;
+                InternalVar.Cycles = Lookup[0].Cycles;
 
-                Lookup[Opcode].Addressmode();
-                Lookup[Opcode].Operate();
+                Lookup[InternalVar.Opcode].Addressmode();
+                Lookup[InternalVar.Opcode].Operate();
 
-                Cycles += (additionalCycle1 & additionalCycle2);
+                InternalVar.Cycles += (additionalCycle1 & additionalCycle2);
             }
 
-            Cycles--;
+            InternalVar.Cycles--;
         }
     }
 }
