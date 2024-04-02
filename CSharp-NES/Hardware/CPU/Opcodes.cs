@@ -2,6 +2,17 @@
 {
     internal class Opcodes
     {
+        private ICPU CPU;
+        private Registers RG;
+        private InternalVar IV;
+
+        public Opcodes(ICPU cpu, Registers rg, InternalVar iv)
+        {
+            CPU = cpu;
+            RG = rg;
+            IV = iv;
+        }
+
         // OpcodesFN
         public byte ADC()
         {
@@ -10,7 +21,11 @@
 
         public byte AND()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            RG.A = (byte)(RG.A & IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);   // it checks if the 7th bit is a 1. The conversion to bool must be done in this fancy way (TODO: check if it can be done with a bool cast)
+            return 1;
         }
 
         public byte ASL()
@@ -18,19 +33,67 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Branch if Carry clear
+        /// </summary>
         public byte BCC()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.C) == 0)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Branch if Carry is set
+        /// </summary>
         public byte BCS()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.C) == 1)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Branch if equal
+        /// </summary>
         public byte BEQ()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.Z) == 1)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
         public byte BIT()
@@ -38,19 +101,67 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Branch if negative
+        /// </summary>
         public byte BMI()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.N) == 1)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Branch if not equal
+        /// </summary>
         public byte BNE()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.Z) == 0)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Branch if positive
+        /// </summary>
         public byte BPL()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.N) == 0)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
         public byte BRK()
@@ -58,24 +169,61 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Branch if overflow
+        /// </summary>
         public byte BVC()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.V) == 0)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Branch if not overflowed
+        /// </summary>
         public byte BVS()
         {
-            throw new NotImplementedException();
+            if (CPU.GetFlag(FLAGS6502.V) == 1)
+            {
+                IV.Cycles++;
+                IV.AddrAbs = (ushort)(RG.PC + IV.AddrRel);
+
+                if ((IV.AddrAbs & 0xFF00) != (RG.PC & 0xFF00))
+                {
+                    IV.Cycles++;
+                }
+
+                RG.PC = IV.AddrAbs;
+            }
+
+            return 0;
         }
 
+        /// <summary>
+        /// Clear the Carry bit
+        /// </summary>
         public byte CLC()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.C, false);
+            return 0;
         }
 
         public byte CLD()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.D, false);
+            return 0;
         }
 
         public byte CLI()
