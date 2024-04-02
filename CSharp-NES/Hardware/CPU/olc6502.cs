@@ -17,7 +17,7 @@ namespace CSharp_NES.Hardware.CPU
 
         public olc6502()
         {
-            OpcodesFN = new Opcodes();
+            OpcodesFN = new Opcodes(this, Registers, InternalVar);
             AModes = new AddressingModes(this, Registers, InternalVar);
 
             Lookup = LookupInstructions(OpcodesFN, AModes);
@@ -343,10 +343,10 @@ namespace CSharp_NES.Hardware.CPU
 
                 InternalVar.Cycles = Lookup[0].Cycles;
 
-                Lookup[InternalVar.Opcode].Addressmode();
-                Lookup[InternalVar.Opcode].Operate();
+                byte additionalCycle1 = Lookup[InternalVar.Opcode].Addressmode();
+                byte additionalCycle2 = Lookup[InternalVar.Opcode].Operate();
 
-                InternalVar.Cycles += (additionalCycle1 & additionalCycle2);
+                InternalVar.Cycles += (byte)(additionalCycle1 & additionalCycle2);
             }
 
             InternalVar.Cycles--;
