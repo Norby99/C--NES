@@ -4,11 +4,11 @@ namespace CSharp_NES.Hardware.CPU
 {
     internal class AddressingModes
     {
-        private ACPU CPU;
+        private ICPU CPU;
         private Registers RG;
         private InternalVar IV;
 
-        public AddressingModes(ACPU cpu, Registers rg, InternalVar iv)
+        public AddressingModes(ICPU cpu, Registers rg, InternalVar iv)
         {
             CPU = cpu;
             RG = rg;
@@ -104,7 +104,6 @@ namespace CSharp_NES.Hardware.CPU
             // returns 1 if it occured an overflow and an other clock cycle is required
             return (byte)((IV.AddrAbs & 0xFF00) != (hi << 8) ? 1 : 0);
         }
-
 
         // same as above but using indicators
 

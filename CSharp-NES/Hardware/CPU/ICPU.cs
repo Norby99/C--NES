@@ -40,32 +40,32 @@ namespace CSharp_NES.Hardware.CPU
         }
     }
 
-    internal abstract class ACPU
+    internal enum FLAGS6502
+    {
+        C = 1 << 0,   // Carry bit
+        Z = 1 << 1,   // Zero
+        I = 1 << 2,   // Disable Interrupts
+        D = 1 << 3,   // Decimal Mode (Not used)
+        B = 1 << 4,   // Break
+        U = 1 << 5,   // Unused
+        V = 1 << 6,   // Overflow
+        N = 1 << 7,   // Negative
+    }
+
+    internal interface ICPU
     {
         public abstract void ConnectBus(IBus n);
 
-        public enum FLAGS6502
-        {
-            C = 1 << 0,   // Carry bit
-            Z = 1 << 1,   // Zero
-            I = 1 << 2,   // Disable Interrupts
-            D = 1 << 3,   // Decimal Mode (Not used)
-            B = 1 << 4,   // Break
-            U = 1 << 5,   // Unused
-            V = 1 << 6,   // Overflow
-            N = 1 << 7,   // Negative
-        }
-
-        public abstract void Clock();
+        public void Clock();
 
         // Interrupts
-        public abstract void Reset();
-        public abstract void IRQ();
-        public abstract void NMI();
+        public void Reset();
+        public void IRQ();
+        public void NMI();
 
-        public abstract byte Fetch();
+        public byte Fetch();
 
-        public abstract void Write(ushort addr, byte data);
-        public abstract byte Read(ushort addr);
+        public void Write(ushort addr, byte data);
+        public byte Read(ushort addr);
     }
 }

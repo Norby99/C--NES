@@ -2,7 +2,7 @@
 
 namespace CSharp_NES.Hardware.CPU
 {
-    internal class olc6502 : ACPU
+    internal class olc6502 : ICPU
     {
         private IBus BUS;
 
@@ -292,17 +292,17 @@ namespace CSharp_NES.Hardware.CPU
             };
         }
 
-        public override void ConnectBus(IBus n)
+        public void ConnectBus(IBus n)
         {
             BUS = n;
         }
 
-        public override void Write(ushort addr, byte data)
+        public void Write(ushort addr, byte data)
         {
             BUS.Write(addr, data);
         }
 
-        public override byte Read(ushort addr)
+        public byte Read(ushort addr)
         {
             return BUS.Read(addr, false);
         }
@@ -317,7 +317,7 @@ namespace CSharp_NES.Hardware.CPU
             throw new NotImplementedException();
         }
 
-        public override void Clock()
+        public void Clock()
         {
             if (InternalVar.Cycles == 0)
             {
