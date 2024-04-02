@@ -307,14 +307,31 @@ namespace CSharp_NES.Hardware.CPU
             return BUS.Read(addr, false);
         }
 
-        private byte GetFlag(FLAGS6502 flag)
+        public byte GetFlag(FLAGS6502 flag)
         {
-            throw new NotImplementedException();
+            return (byte)(((Registers.Status & (byte)flag) > 0) ? 1 : 0);
         }
 
-        private void SetFlag(FLAGS6502 flag)
+        public void SetFlag(FLAGS6502 flag, bool value)
         {
-            throw new NotImplementedException();
+            if (value)
+            {
+                Registers.Status |= (byte)flag;
+            }
+            else
+            {
+                Registers.Status &= (byte)(~flag);
+            }
+        }
+
+        public byte Fetch()
+        {
+            if (Lookup[InternalVar.Opcode].Addressmode == AModes.IMP)
+            {
+                InternalVar.Fetched = Read(InternalVar.AddrAbs);
+            }
+
+            return InternalVar.Fetched;
         }
 
         public void Clock()

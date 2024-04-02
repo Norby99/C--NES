@@ -58,6 +58,10 @@ namespace CSharp_NES.Hardware.CPU
 
         public void Clock();
 
+        public byte GetFlag(FLAGS6502 flag);
+
+        public void SetFlag(FLAGS6502 flag, bool value);
+
         // Interrupts
         public void Reset();
         public void IRQ();
