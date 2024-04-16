@@ -14,9 +14,22 @@
         }
 
         // OpcodesFN
+
+        /// <summary>
+        /// Adds two registers
+        /// </summary>
         public byte ADC()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            // converting all data to uint16 to easly check if there was an overflow or underflow
+            UInt16 temp = (UInt16)((UInt16)RG.A + (UInt16)IV.Fetched + (UInt16)CPU.GetFlag(FLAGS6502.C));
+            CPU.SetFlag(FLAGS6502.C, temp > 255);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x80) != 0);   // can't convert int to bool workaround
+            CPU.SetFlag(FLAGS6502.V, ((UInt16)(~((UInt16)RG.A ^ (UInt16)IV.Fetched) & ((UInt16)RG.A ^ temp)) & 0x0080) != 0);   // checking if there is an overflow or underflow + bool tweek
+
+            RG.A = (byte)(temp & 0x00FF);
+            return 1;
         }
 
         public byte AND()
@@ -366,9 +379,25 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Subtracts two registers
+        /// </summary>
         public byte SBC()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            // inverting the value to be negative so I can add the two registers together
+            UInt16 value = (UInt16)((UInt16)IV.Fetched ^ 0x00FF);
+
+            // converting all data to uint16 to easly check if there was an overflow or underflow
+            UInt16 temp = (UInt16)((UInt16)RG.A + (UInt16)value + (UInt16)CPU.GetFlag(FLAGS6502.C));
+            CPU.SetFlag(FLAGS6502.C, (temp & 0xFF00) != 0);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0);
+            CPU.SetFlag(FLAGS6502.V, ((UInt16)((temp ^ (UInt16)RG.A) & (temp ^ value)) & 0x0080) != 0);   // checking if there is an overflow or underflow + bool tweek
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);   // can't convert int to bool workaround
+
+            RG.A = (byte)(temp & 0x00FF);
+            return 1;
         }
 
         public byte SEC()
