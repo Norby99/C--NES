@@ -9,16 +9,17 @@ namespace CSharp_NES.Hardware.CPU
         private Opcodes OpcodesFN;
         private AddressingModes AModes;
 
-        private Registers Registers = new Registers();
-
-        private InternalVar InternalVar = new InternalVar();
+        private Registers RG = new Registers();
+        private InternalVar IV = new InternalVar();
 
         public List<Instruction> Lookup { get; private set; }
 
+        private const ushort stackPDef = 0x0100;    // the stack pointer starts at index 0x0100 (it is hardcoded in the CPU)
+
         public olc6502()
         {
-            OpcodesFN = new Opcodes(this, Registers, InternalVar);
-            AModes = new AddressingModes(this, Registers, InternalVar);
+            OpcodesFN = new Opcodes(this, RG, IV, stackPDef);
+            AModes = new AddressingModes(this, RG, IV);
 
             Lookup = LookupInstructions(OpcodesFN, AModes);
         }
@@ -309,47 +310,128 @@ namespace CSharp_NES.Hardware.CPU
 
         public byte GetFlag(FLAGS6502 flag)
         {
-            return (byte)(((Registers.Status & (byte)flag) > 0) ? 1 : 0);
+            return (byte)(((RG.Status & (byte)flag) > 0) ? 1 : 0);
         }
 
         public void SetFlag(FLAGS6502 flag, bool value)
         {
             if (value)
             {
-                Registers.Status |= (byte)flag;
+                RG.Status |= (byte)flag;
             }
             else
             {
-                Registers.Status &= (byte)(~flag);
+                RG.Status &= (byte)(~flag);
             }
         }
 
         public byte Fetch()
         {
-            if (Lookup[InternalVar.Opcode].Addressmode == AModes.IMP)
+            if (Lookup[IV.Opcode].Addressmode == AModes.IMP)
             {
-                InternalVar.Fetched = Read(InternalVar.AddrAbs);
+                IV.Fetched = Read(IV.AddrAbs);
             }
 
-            return InternalVar.Fetched;
+            return IV.Fetched;
+        }
+
+        /// <summary>
+        /// Configures the CPU to a known state
+        /// </summary>
+        public void Reset()
+        {
+            RG.A = 0x0000;
+            RG.X = 0x0000;
+            RG.Y = 0x0000;
+            RG.STKP = 0x00FD;
+            RG.Status = (byte)(0x0000 | FLAGS6502.U);
+
+            IV.AddrAbs = 0xFFFC;
+            UInt16 lo = Read((ushort)(IV.AddrAbs + 0));
+            UInt16 hi = Read((ushort)(IV.AddrAbs + 1));
+
+            RG.PC = (ushort)((hi << 8) | lo);
+
+            IV.AddrRel = 0x0000;
+            IV.AddrAbs = 0x0000;
+            IV.Fetched = 0x0000;
+
+            IV.Cycles = 8;
+        }
+
+        /// <summary>
+        /// Internal requests (interrupt)
+        /// </summary>
+        public void IRQ()
+        {
+            if (GetFlag(FLAGS6502.I) != 0)
+            {
+                return;
+            }
+
+            Write((ushort)(stackPDef + RG.STKP), (byte)((RG.PC >> 8) & 0x00FF));
+            RG.STKP--;
+            Write((ushort)(stackPDef + RG.STKP), (byte)(RG.PC & 0x00FF));
+            RG.STKP--;
+
+            SetFlag(FLAGS6502.B, false);
+            SetFlag(FLAGS6502.U, true);
+            SetFlag(FLAGS6502.I, true);
+
+            Write((ushort)(stackPDef + RG.STKP), RG.Status);
+            RG.STKP--;
+
+            IV.AddrAbs = 0xFFFE;
+            UInt16 lo = Read((ushort)(IV.AddrAbs + 0));
+            UInt16 hi = Read((ushort)(IV.AddrAbs + 1));
+
+            RG.PC = (ushort)((hi << 8) | lo);
+
+            IV.Cycles = 7;
+        }
+
+        /// <summary>
+        /// Non mascable interrupt
+        /// </summary>
+        public void NMI()
+        {
+            Write((ushort)(stackPDef + RG.STKP), (byte)((RG.PC >> 8) & 0x00FF));
+            RG.STKP--;
+            Write((ushort)(stackPDef + RG.STKP), (byte)(RG.PC & 0x00FF));
+            RG.STKP--;
+
+            SetFlag(FLAGS6502.B, false);
+            SetFlag(FLAGS6502.U, true);
+            SetFlag(FLAGS6502.I, true);
+
+            Write((ushort)(stackPDef + RG.STKP), RG.Status);
+            RG.STKP--;
+
+            IV.AddrAbs = 0xFFFA;
+            UInt16 lo = Read((ushort)(IV.AddrAbs + 0));
+            UInt16 hi = Read((ushort)(IV.AddrAbs + 1));
+
+            RG.PC = (ushort)((hi << 8) | lo);
+
+            IV.Cycles = 8;
         }
 
         public void Clock()
         {
-            if (InternalVar.Cycles == 0)
+            if (IV.Cycles == 0)
             {
-                InternalVar.Opcode = Read(Registers.PC);
-                Registers.PC++;
+                IV.Opcode = Read(RG.PC);
+                RG.PC++;
 
-                InternalVar.Cycles = Lookup[0].Cycles;
+                IV.Cycles = Lookup[0].Cycles;
 
-                byte additionalCycle1 = Lookup[InternalVar.Opcode].Addressmode();
-                byte additionalCycle2 = Lookup[InternalVar.Opcode].Operate();
+                byte additionalCycle1 = Lookup[IV.Opcode].Addressmode();
+                byte additionalCycle2 = Lookup[IV.Opcode].Operate();
 
-                InternalVar.Cycles += (byte)(additionalCycle1 & additionalCycle2);
+                IV.Cycles += (byte)(additionalCycle1 & additionalCycle2);
             }
 
-            InternalVar.Cycles--;
+            IV.Cycles--;
         }
     }
 }
