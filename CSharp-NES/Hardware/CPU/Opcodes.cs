@@ -399,9 +399,23 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// After servicing an interrupt,
+        /// this function returns from it
+        /// </summary>
         public byte RTI()
         {
-            throw new NotImplementedException();
+            RG.STKP++;
+            RG.Status = CPU.Read((ushort)(stackPDef + RG.STKP));
+            RG.Status = (byte)(RG.Status & ~(byte)FLAGS6502.B);
+            RG.Status = (byte)(RG.Status & ~(byte)FLAGS6502.U);
+
+            RG.STKP++;
+            RG.PC = CPU.Read((ushort)(stackPDef + RG.STKP));
+            RG.STKP++;
+            RG.PC = (ushort)(RG.PC | CPU.Read((ushort)(stackPDef + RG.STKP)) << 8);
+
+            return 0;
         }
 
         public byte RTS()
