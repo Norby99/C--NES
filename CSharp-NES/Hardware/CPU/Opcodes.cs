@@ -1,16 +1,34 @@
 ﻿namespace CSharp_NES.Hardware.CPU
 {
+    /// <summary>
+    /// Operations that the CPU can do
+    /// NOTE: All the returns values indicates if the 
+    /// selected instraction can require an other CPU
+    /// cycle to execute. This doesn't mean that it
+    /// will use an other cycle.
+    /// </summary>
     internal class Opcodes
     {
         private ICPU CPU;
         private Registers RG;
         private InternalVar IV;
 
-        public Opcodes(ICPU cpu, Registers rg, InternalVar iv)
+        private ushort stackPDef;
+
+        /// <summary>
+        /// Links the opcodes to the CPU
+        /// </summary>
+        /// <param name="cpu"> The CPU to be connected to </param>
+        /// <param name="rg"> The registers of the CPU </param>
+        /// <param name="iv"> Internal variable of the CPU </param>
+        /// <param name="stckPD"> The defualt stack pointer initial position </param>
+        public Opcodes(ICPU cpu, Registers rg, InternalVar iv, ushort stckPD)
         {
             CPU = cpu;
             RG = rg;
             IV = iv;
+
+            stackPDef = stckPD;
         }
 
         // OpcodesFN
@@ -339,9 +357,14 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Push the accumulator to the stack
+        /// </summary>
         public byte PHA()
         {
-            throw new NotImplementedException();
+            CPU.Write((ushort)(stackPDef + RG.STKP), RG.A);
+            RG.STKP--;
+            return 0;
         }
 
         public byte PHP()
@@ -349,9 +372,16 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Pops data from the stack and adds it to the accumulator
+        /// </summary>
         public byte PLA()
         {
-            throw new NotImplementedException();
+            RG.STKP++;
+            RG.A = CPU.Read((ushort)(stackPDef + RG.STKP));
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x0080) != 0);
+            return 0;
         }
 
         public byte PLP()
