@@ -1,4 +1,7 @@
-﻿namespace CSharp_NES.Hardware.CPU
+﻿using System.Reflection.Emit;
+using System;
+
+namespace CSharp_NES.Hardware.CPU
 {
     /// <summary>
     /// Operations that the CPU can do
@@ -14,6 +17,7 @@
         private InternalVar IV;
 
         private ushort stackPDef;
+        private List<Instruction> Lookups;
 
         /// <summary>
         /// Links the opcodes to the CPU
@@ -22,13 +26,14 @@
         /// <param name="rg"> The registers of the CPU </param>
         /// <param name="iv"> Internal variable of the CPU </param>
         /// <param name="stckPD"> The defualt stack pointer initial position </param>
-        public Opcodes(ICPU cpu, Registers rg, InternalVar iv, ushort stckPD)
+        public Opcodes(ICPU cpu, Registers rg, InternalVar iv, ushort stckPD, List<Instruction> lookups)
         {
             CPU = cpu;
             RG = rg;
             IV = iv;
 
             stackPDef = stckPD;
+            Lookups = lookups;
         }
 
         // OpcodesFN
@@ -59,9 +64,22 @@
             return 1;
         }
 
+        /// <summary>
+        /// Arithmetic Shift left
+        /// </summary>
         public byte ASL()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)(IV.Fetched << 1);
+            CPU.SetFlag(FLAGS6502.C, (temp & 0xFF00) > 0);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x80) != 0);
+
+            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     // not sure if this works
+                RG.A = (byte)(temp & 0x00FF);
+            else
+                CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            return 0;
         }
 
         /// <summary>
@@ -127,9 +145,21 @@
             return 0;
         }
 
+        /// <summary>
+        /// BIT (short for "BIT test") is the mnemonic for a machine language instruction which
+        /// tests specific bits in the contents of the address specified, and sets the zero,
+        /// negative, and overflow flags accordingly, all without affecting the contents of
+        /// the accumulator.
+        /// Whilst BIT is mainly used for checking the state of particular bits in memory.
+        /// </summary>
         public byte BIT()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)(RG.A & IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (IV.Fetched & (1 << 7)) != 0);
+            CPU.SetFlag(FLAGS6502.V, (IV.Fetched & (1 << 6)) != 0);
+            return 0;
         }
 
         /// <summary>
@@ -195,9 +225,27 @@
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Break
+        /// Program Sourced Interrupt
+        /// </summary>
         public byte BRK()
         {
-            throw new NotImplementedException();
+            RG.PC++;
+
+            CPU.SetFlag(FLAGS6502.I, true);
+            CPU.Write((ushort)(0x0100 + RG.STKP), (byte)((RG.PC >> 8) & 0x00FF));
+            RG.STKP--;
+            CPU.Write((ushort)(0x0100 + RG.STKP), (byte)(RG.PC & 0x00FF));
+            RG.STKP--;
+
+            CPU.SetFlag(FLAGS6502.B, true);
+            CPU.Write((ushort)(0x0100 + RG.STKP), RG.Status);
+            RG.STKP--;
+            CPU.SetFlag(FLAGS6502.B, false);
+
+            RG.PC = (ushort)((UInt16)CPU.Read(0xFFFE) | ((UInt16)CPU.Read(0xFFFF) << 8));
+            return 0;
         }
 
         /// <summary>
@@ -257,44 +305,108 @@
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Disable Interrupts / Clear Interrupt Flag
+        /// </summary>
         public byte CLI()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.I, false);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Clear Overflow Flag
+        /// </summary>
         public byte CLV()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.V, false);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Compare Accumulator
+        /// Function:    C <- A >= M      Z <- (A - M) == 0
+        /// Flags Out:   N, C, Z
+        /// </summary>
         public byte CMP()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)((UInt16)RG.A - (UInt16)IV.Fetched);
+            CPU.SetFlag(FLAGS6502.C, RG.A >= IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+            return 1;
         }
 
+        /// <summary>
+        /// Instruction: Compare X Register
+        /// Function:    C <- X >= M      Z <- (X - M) == 0
+        /// Flags Out:   N, C, Z
+        /// </summary>
         public byte CPX()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)((UInt16)RG.X - (UInt16)IV.Fetched);
+            CPU.SetFlag(FLAGS6502.C, RG.X >= IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Compare Y Register
+        /// Function:    C <- Y >= M      Z <- (Y - M) == 0
+        /// Flags Out:   N, C, Z
+        /// </summary>
         public byte CPY()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)((UInt16)RG.Y - (UInt16)IV.Fetched);
+            CPU.SetFlag(FLAGS6502.C, RG.Y >= IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Decrement Value at Memory Location
+        /// Function:    M = M - 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte DEC()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)(IV.Fetched - 1);
+            CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Decrement X Register
+        /// Function:    X = X - 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte DEX()
         {
-            throw new NotImplementedException();
+            RG.X--;
+            CPU.SetFlag(FLAGS6502.Z, RG.X == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.X & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Decrement Y Register
+        /// Function:    Y = Y - 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte DEY()
         {
-            throw new NotImplementedException();
+            RG.Y--;
+            CPU.SetFlag(FLAGS6502.Z, RG.Y == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.Y & 0x80) != 0);
+            return 0;
         }
 
         public byte EOR()

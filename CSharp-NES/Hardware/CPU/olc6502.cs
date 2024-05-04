@@ -18,7 +18,7 @@ namespace CSharp_NES.Hardware.CPU
 
         public olc6502()
         {
-            OpcodesFN = new Opcodes(this, RG, IV, stackPDef);
+            OpcodesFN = new Opcodes(this, RG, IV, stackPDef, Lookup);
             AModes = new AddressingModes(this, RG, IV);
 
             Lookup = LookupInstructions(OpcodesFN, AModes);
