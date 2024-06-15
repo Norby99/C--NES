@@ -409,29 +409,69 @@ namespace CSharp_NES.Hardware.CPU
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Bitwise Logic XOR
+        /// Function:    A = A xor M
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte EOR()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            RG.A = (byte)(RG.A ^ IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);
+            return 1;
         }
 
+        /// <summary>
+        /// Instruction: Increment Value at Memory Location
+        /// Function:    M = M + 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte INC()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            byte temp = (byte)(IV.Fetched + 1);
+            CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Increment X Register
+        /// Function:    X = X + 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte INX()
         {
-            throw new NotImplementedException();
+            RG.X++;
+            CPU.SetFlag(FLAGS6502.Z, RG.X == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.X & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Increment Y Register
+        /// Function:    Y = Y + 1
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte INY()
         {
-            throw new NotImplementedException();
+            RG.Y++;
+            CPU.SetFlag(FLAGS6502.Z, RG.Y == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.Y & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Jump To Location
+        /// Function:    pc = address
+        /// </summary>
         public byte JMP()
         {
-            throw new NotImplementedException();
+            RG.PC = IV.AddrAbs;
+            return 0;
         }
 
         public byte JSR()
