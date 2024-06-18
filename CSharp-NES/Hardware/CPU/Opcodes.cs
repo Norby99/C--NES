@@ -1,7 +1,4 @@
-﻿using System.Reflection.Emit;
-using System;
-
-namespace CSharp_NES.Hardware.CPU
+﻿namespace CSharp_NES.Hardware.CPU
 {
     /// <summary>
     /// Operations that the CPU can do
@@ -75,7 +72,7 @@ namespace CSharp_NES.Hardware.CPU
             CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
             CPU.SetFlag(FLAGS6502.N, (temp & 0x80) != 0);
 
-            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     // not sure if this works
+            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     //! not sure if this works
                 RG.A = (byte)(temp & 0x00FF);
             else
                 CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
@@ -474,29 +471,90 @@ namespace CSharp_NES.Hardware.CPU
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Jump To Sub-Routine
+        /// Function:    Push current pc to stack, pc = address
+        /// </summary>
         public byte JSR()
         {
-            throw new NotImplementedException();
+            RG.PC--;
+
+            CPU.Write((ushort)(0x0100 + RG.STKP), (byte)((RG.PC >> 8) & 0x00FF));
+            RG.STKP--;
+            CPU.Write((ushort)(0x0100 + RG.STKP), (byte)(RG.PC & 0x00FF));
+            RG.STKP--;
+
+            RG.PC = IV.AddrAbs;
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Load The Accumulator
+        /// Function:    A = M
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte LDA()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            
+            RG.A = IV.Fetched;
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);
+
+            return 1;
         }
 
+        /// <summary>
+        /// Instruction: Load The X Register
+        /// Function:    X = M
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte LDX()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            RG.X = IV.Fetched;
+            CPU.SetFlag(FLAGS6502.Z, RG.X == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.X & 0x80) != 0);
+
+            return 1;
         }
 
+        /// <summary>
+        /// Instruction: Load The Y Register
+        /// Function:    Y = M
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte LDY()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            RG.Y = IV.Fetched;
+            CPU.SetFlag(FLAGS6502.Z, RG.Y == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.Y & 0x80) != 0);
+
+            return 1;
         }
 
         public byte LSR()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            CPU.SetFlag(FLAGS6502.C, (IV.Fetched & 0x0001) != 0);
+            UInt16 temp = (UInt16)(IV.Fetched >> 1);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+
+            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     //! not sure if this works
+            {
+                RG.A = (byte)(temp & 0x00FF);
+            }
+            else
+            {
+                CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            }
+
+            return 0;
         }
 
         public byte NOP()
