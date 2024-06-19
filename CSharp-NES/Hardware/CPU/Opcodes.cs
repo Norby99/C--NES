@@ -557,14 +557,43 @@
             return 0;
         }
 
+        /// <summary>
+        /// No Operation.
+        /// There are a lot of them, I've implemented only a couple of them.
+        /// </summary>
         public byte NOP()
         {
-            throw new NotImplementedException();
+            byte loops = 0;
+
+            switch (IV.Opcode)
+            {
+                case 0x1C:
+                case 0x3C:
+                case 0x5C:
+                case 0x7C:
+                case 0xDC:
+                case 0xFC:
+                    loops = 1;
+                    break;
+            }
+
+            return loops;
         }
 
+        /// <summary>
+        /// Instruction: Bitwise Logic OR
+        /// Function:    A = A | M
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte ORA()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            RG.A = (byte)(RG.A | IV.Fetched);
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);
+
+            return 1;
         }
 
         /// <summary>
@@ -577,9 +606,21 @@
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Push Status Register to Stack
+        /// Function:    status -> stack
+        /// Note:        Break flag is set to 1 before push
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         public byte PHP()
         {
-            throw new NotImplementedException();
+            CPU.Write((ushort)(0x0100 + RG.STKP), (byte)(RG.Status | (byte)FLAGS6502.B | (byte)FLAGS6502.U));
+            CPU.SetFlag(FLAGS6502.B, false);
+            CPU.SetFlag(FLAGS6502.U, false);
+            RG.STKP--;
+
+            return 0;
         }
 
         /// <summary>
@@ -594,14 +635,37 @@
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Pop Status Register off Stack
+        /// Function:    Status <- stack
+        /// </summary>
         public byte PLP()
         {
-            throw new NotImplementedException();
+            RG.STKP++;
+            RG.Status = CPU.Read((ushort)(0x0100 + RG.STKP));
+            CPU.SetFlag(FLAGS6502.U, true);
+
+            return 0;
         }
 
         public byte ROL()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+            UInt16 temp = (UInt16)((IV.Fetched << 1) | CPU.GetFlag(FLAGS6502.C));
+            CPU.SetFlag(FLAGS6502.C, (temp & 0xFF00) != 0);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+
+            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     //! not sure if this works
+            {
+                RG.A = (byte)(temp & 0x00FF);
+            }
+            else
+            {
+                CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            }
+
+            return 0;
         }
 
         public byte ROR()
