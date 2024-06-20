@@ -651,6 +651,7 @@
         public byte ROL()
         {
             CPU.Fetch();
+
             UInt16 temp = (UInt16)((IV.Fetched << 1) | CPU.GetFlag(FLAGS6502.C));
             CPU.SetFlag(FLAGS6502.C, (temp & 0xFF00) != 0);
             CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x0000);
@@ -670,7 +671,23 @@
 
         public byte ROR()
         {
-            throw new NotImplementedException();
+            CPU.Fetch();
+
+            UInt16 temp = (UInt16)((CPU.GetFlag(FLAGS6502.C) << 7) | (IV.Fetched >> 1));
+            CPU.SetFlag(FLAGS6502.C, (IV.Fetched & 0x01) != 0);
+            CPU.SetFlag(FLAGS6502.Z, (temp & 0x00FF) == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (temp & 0x0080) != 0);
+
+            if (Lookups[IV.Opcode].Addressmode.Method.Name == "IMP")     //! not sure if this works
+            {
+                RG.A = (byte)(temp & 0x00FF);
+            }
+            else
+            {
+                CPU.Write(IV.AddrAbs, (byte)(temp & 0x00FF));
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -694,7 +711,13 @@
 
         public byte RTS()
         {
-            throw new NotImplementedException();
+            RG.STKP++;
+            RG.PC = CPU.Read((ushort)(0x0100 + RG.STKP));
+            RG.STKP++;
+            RG.PC = (ushort)(RG.PC | CPU.Read((ushort)(0x0100 + RG.STKP)) << 8);
+            RG.PC++;
+
+            return 0;
         }
 
         /// <summary>
@@ -718,19 +741,34 @@
             return 1;
         }
 
+        /// <summary>
+        /// Instruction: Set Carry Flag
+        /// Function:    C = 1
+        /// </summary>
         public byte SEC()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.C, true);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Set Decimal Flag
+        /// Function:    D = 1
+        /// </summary>
         public byte SED()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.D, true);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Set Interrupt Flag / Enable Interrupts
+        /// Function:    I = 1
+        /// </summary>
         public byte SEI()
         {
-            throw new NotImplementedException();
+            CPU.SetFlag(FLAGS6502.I, true);
+            return 0;
         }
 
         public byte STA()
