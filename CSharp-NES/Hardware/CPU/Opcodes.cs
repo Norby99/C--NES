@@ -771,49 +771,109 @@
             return 0;
         }
 
+        /// <summary>
+        /// Instruction: Store Accumulator at Address
+        ///  Function:    M = A
+        /// </summary>
         public byte STA()
         {
-            throw new NotImplementedException();
+            CPU.Write(IV.AddrAbs, RG.A);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Store X Register at Address
+        /// Function:    M = X
+        /// </summary>
         public byte STX()
         {
-            throw new NotImplementedException();
+            CPU.Write(IV.AddrAbs, RG.X);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Store Y Register at Address
+        /// Function:    M = Y
+        /// </summary>
         public byte STY()
         {
-            throw new NotImplementedException();
+            CPU.Write(IV.AddrAbs, RG.Y);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer Accumulator to X Register
+        /// Function:    X = A
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte TAX()
         {
-            throw new NotImplementedException();
+            RG.X = RG.A;
+            CPU.SetFlag(FLAGS6502.Z, RG.X == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.X & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer Accumulator to Y Register
+        /// Function:    Y = A
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte TAY()
         {
-            throw new NotImplementedException();
+            RG.Y = RG.A;
+            CPU.SetFlag(FLAGS6502.Z, RG.Y == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.Y & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer Stack Pointer to X Register
+        /// Function:    X = stack pointer
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte TSX()
         {
-            throw new NotImplementedException();
+            RG.X = RG.STKP;
+            CPU.SetFlag(FLAGS6502.Z, RG.X == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.X & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer X Register to Accumulator
+        /// Function:    A = X
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte TXA()
         {
-            throw new NotImplementedException();
+            RG.A = RG.X;
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer X Register to Stack Pointer
+        /// Function:    stack pointer = X
+        /// </summary>
         public byte TXS()
         {
-            throw new NotImplementedException();
+            RG.STKP = RG.X;
+            return 0;
         }
 
+        /// <summary>
+        /// Instruction: Transfer Y Register to Accumulator
+        /// Function:    A = Y
+        /// Flags Out:   N, Z
+        /// </summary>
         public byte TYA()
         {
-            throw new NotImplementedException();
+            RG.A = RG.Y;
+            CPU.SetFlag(FLAGS6502.Z, RG.A == 0x00);
+            CPU.SetFlag(FLAGS6502.N, (RG.A & 0x80) != 0);
+            return 0;
         }
 
         // Illigal OpcodesFN
